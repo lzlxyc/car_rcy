@@ -25,7 +25,6 @@ class AiBox:
             else:
                 self.MODEL = "qwen2.5-72b-instruct"
                 self.MODEL = "qwen-plus"
-                self.MODEL = 'qwen-max'
                 API_KEY = "sk-f208bdeb39714ec68c84c524005104ee"
                 BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
             

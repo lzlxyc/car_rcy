@@ -3,7 +3,7 @@ import numpy as np
 from dateutil.parser import parse
 from collections import Counter
 from sklearn.model_selection import train_test_split
-
+import datetime
 
 # 1. 处理列表型字段（拆分并排序）
 def process_list_fields(df, for_train=True):
@@ -59,6 +59,25 @@ def analyze_travel_patterns(df):
     返回:
         新增特征后的DataFrame
     """
+    def time_split(row):
+        if len(row['sorted_ord_time']) <=1:
+            return row['sorted_ord_biz'], row['sorted_ord_time']
+
+        if 'create_time' not in row.keys():
+            end_day = row['sorted_ord_time'][-1]
+        else:
+            end_day = datetime.datetime.strptime(row['create_time'], "%Y-%m-%d %H:%M:%S.%f")  # 转换为datetime对象
+        for i in range(len(row['sorted_ord_time'])):
+            time_diff = (end_day - row['sorted_ord_time'][i]).days
+            if time_diff < 45 or len(row['sorted_ord_time']) - i <= 15:
+                row['sorted_ord_biz'] = row['sorted_ord_biz'][i:]
+                row['sorted_ord_time'] = row['sorted_ord_time'][i:]
+                break
+
+        return row['sorted_ord_biz'], row['sorted_ord_time']
+
+    df['sorted_ord_biz'], df['sorted_ord_time'] = zip(*df.apply(time_split, axis=1))
+
     # 初始化新特征列
     new_features = pd.DataFrame()
     new_features['user_id'] = df['user_id']
@@ -74,7 +93,10 @@ def analyze_travel_patterns(df):
         if not row['sorted_ord_biz']:
             return None
         # 按时间排序（已排序但确保顺序），取最近3条
+
         combined = list(zip(row['sorted_ord_biz'], row['sorted_ord_time']))
+
+
         combined_sorted = sorted(combined, key=lambda x: x[1])  # 最近的在前
         recent_topK = 5 if len(combined_sorted) < 15 else 8
         recent = combined_sorted[-recent_topK:]  # 取最近3次
@@ -225,9 +247,9 @@ def generate_dataset(features, out_file):
 
 
 if __name__ == '__main__':
-    df = load_data()
-    generate_dataset(df, 'train')
+    # df = load_data()
+    # generate_dataset(df, 'train')
 
 
-    # df = load_data('../DATA/predict.csv')
-    # generate_dataset(df, 'test')
+    df = load_data('../DATA/predict.csv')
+    generate_dataset(df, 'test')
