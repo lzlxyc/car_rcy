@@ -1,0 +1,25 @@
+swift sft ^
+    --model "D:/LZL/workspace/ModelHub/Qwen2.5-3B-Instruct" ^
+    --train_type lora ^
+    --dataset "D:/LZL/workspace/MmodaleCompetitions/2025car_rcy/DATA/train_v4.jsonl" ^
+    --val_dataset "D:/LZL/workspace/MmodaleCompetitions/2025car_rcy/DATA/val_v4.jsonl" ^
+    --torch_dtype bfloat16 ^
+    --num_train_epochs 2 ^
+    --per_device_train_batch_size 4 ^
+    --per_device_eval_batch_size 4 ^
+    --learning_rate 1e-4 ^
+    --lora_rank 8 ^
+    --lora_alpha 32 ^
+    --target_modules all-linear ^
+    --gradient_accumulation_steps 1 ^
+    --eval_steps 100 ^
+    --save_steps 100 ^
+    --save_total_limit 2 ^
+    --logging_steps 10 ^
+    --max_length 6000 ^
+    --truncation_strategy left ^
+    --output_dir "D:/LZL/workspace/MmodaleCompetitions/2025car_rcy/models" ^
+    --warmup_ratio 0.05 ^
+    --dataloader_num_workers 4 ^
+    --model_author swift ^
+    --model_name swift-robot

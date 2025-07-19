@@ -69,7 +69,7 @@ def analyze_travel_patterns(df):
             end_day = datetime.datetime.strptime(row['create_time'], "%Y-%m-%d %H:%M:%S.%f")  # 转换为datetime对象
         for i in range(len(row['sorted_ord_time'])):
             time_diff = (end_day - row['sorted_ord_time'][i]).days
-            if time_diff < 45 or len(row['sorted_ord_time']) - i <= 15:
+            if time_diff < 45 or len(row['sorted_ord_time']) - i <= 15: # 45
                 row['sorted_ord_biz'] = row['sorted_ord_biz'][i:]
                 row['sorted_ord_time'] = row['sorted_ord_time'][i:]
                 break
@@ -99,6 +99,7 @@ def analyze_travel_patterns(df):
 
         combined_sorted = sorted(combined, key=lambda x: x[1])  # 最近的在前
         recent_topK = 5 if len(combined_sorted) < 15 else 8
+        recent_topK = 3 if len(combined_sorted) < 15 else 5
         recent = combined_sorted[-recent_topK:]  # 取最近3次
         recent_modes = [x[0] for x in recent]
         return Counter(recent_modes).most_common(1)[0][0]
@@ -228,28 +229,33 @@ def generate_dataset(features, out_file):
     dataset = []
     for _, row in features.iterrows():
         prompt = build_prompt(row)
-        dataset.append({
-            'user_id': row['user_id'],
-            'label': row['label'],
-            "conversations": [
-                {"from": "human", "value": prompt},
-                {"from": "gpt", "value": row['label']}
-            ]
-        })
+        # dataset.append({
+        #     'user_id': row['user_id'],
+        #     'label': row['label'],
+        #     "conversations": [
+        #         {"from": "human", "value": prompt},
+        #         {"from": "gpt", "value": row['label']}
+        #     ]
+        # })
+        dataset.append({'instruction': '根据用户的出行记录，预测用户下次的出行方式。',
+                        'input': prompt,
+                        'output': row['label'],
+                        'label': row['label'],
+                        })
     df = pd.DataFrame(dataset)
 
     if out_file == 'train':
         train, val = train_test_split(df, test_size=0.05, random_state=42, stratify=df['label'])
-        save_json(train, f"../DATA/train_v3.jsonl")
-        save_json(val, f"../DATA/val_v3.jsonl")
+        save_json(train, f"../DATA/train_v4.jsonl")
+        save_json(val, f"../DATA/val_v4.jsonl")
     else:
         save_json(df, f"../DATA/{out_file}_v3.jsonl")
 
 
 if __name__ == '__main__':
-    # df = load_data()
-    # generate_dataset(df, 'train')
+    df = load_data()
+    generate_dataset(df, 'train')
 
 
-    df = load_data('../DATA/predict.csv')
-    generate_dataset(df, 'test')
+    # df = load_data('../DATA/predict.csv')
+    # generate_dataset(df, 'test')
